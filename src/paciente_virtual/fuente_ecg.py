@@ -12,9 +12,11 @@ import csv
 import io
 import math
 import statistics
+from bisect import bisect_right
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from enum import Enum
+from functools import cached_property
 from pathlib import Path
 
 COLUMNAS_OBLIGATORIAS = ("tiempo_s", "ecg_mV", "frecuencia_cardiaca_lpm",
@@ -25,6 +27,7 @@ RANGO_FRECUENCIA_LPM = (20.0, 240.0)   # inclusivo
 RANGO_EFICIENCIA = (0.2, 1.2)          # inclusivo
 TOLERANCIA_IRREGULARIDAD = 0.01        # 1 % de la mediana de Δt
 FACTOR_PERDIDA_MUESTRAS = 1.5
+TOLERANCIA_TIEMPO_S = 1e-9           # para comparar tiempos sin usar ==
 MAXIMO_ERRORES_MOSTRADOS = 20
 
 
@@ -89,9 +92,18 @@ class SenalECG:
     def cantidad_muestras(self) -> int:
         return len(self.muestras)
 
-    @property
+    @cached_property
     def tiempos_s(self) -> tuple[float, ...]:
+        """Tiempos de las muestras; se calcula una sola vez porque se consulta en cada ciclo."""
         return tuple(muestra.tiempo_s for muestra in self.muestras)
+
+    @property
+    def tiempo_inicial_s(self) -> float:
+        return self.muestras[0].tiempo_s
+
+    @property
+    def tiempo_final_s(self) -> float:
+        return self.muestras[-1].tiempo_s
 
     @property
     def amplitudes_mV(self) -> tuple[float, ...]:
@@ -118,6 +130,18 @@ class SenalECG:
     @property
     def amplitud_maxima_mV(self) -> float:
         return max(self.amplitudes_mV)
+
+    def muestras_en_intervalo(self, inicio_s: float, fin_s: float) -> tuple[MuestraECG, ...]:
+        """Muestras con inicio_s < t <= fin_s (intervalo semiabierto, con tolerancia)."""
+        tiempos = self.tiempos_s
+        desde = bisect_right(tiempos, inicio_s + TOLERANCIA_TIEMPO_S)
+        hasta = bisect_right(tiempos, fin_s + TOLERANCIA_TIEMPO_S)
+        return self.muestras[desde:hasta]
+
+    def ultima_muestra_hasta(self, tiempo_s: float) -> MuestraECG | None:
+        """Última muestra con t <= tiempo_s (con tolerancia), o None si no hay."""
+        indice = bisect_right(self.tiempos_s, tiempo_s + TOLERANCIA_TIEMPO_S)
+        return self.muestras[indice - 1] if indice > 0 else None
 
     def episodios(self) -> tuple[EpisodioECG, ...]:
         """Agrupa las muestras contiguas que comparten el mismo evento."""
@@ -205,7 +229,9 @@ def _revisar_muestras(muestras: Sequence[MuestraECG],
                 f"{_formatear_rango(RANGO_EFICIENCIA)} en la {ubicacion}"
             )
 
-        if muestra.evento and muestra.evento not in EVENTOS_CONOCIDOS:
+        if not muestra.evento.strip():
+            errores.append(f"valor vacío en 'evento' en la {ubicacion}")
+        elif muestra.evento not in EVENTOS_CONOCIDOS:
             eventos_desconocidos[muestra.evento] = eventos_desconocidos.get(muestra.evento, 0) + 1
 
     for evento, cantidad in eventos_desconocidos.items():
