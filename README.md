@@ -1,95 +1,192 @@
-# Paciente Virtual
+# Paciente Virtual: integración de una fuente externa de ECG
 
-Prototipo educativo que integra tres agentes simplificados: cardiovascular,
-respiratorio y nervioso. El objetivo inicial es verificar la arquitectura y el
-intercambio de variables; no representa todavía un modelo fisiológico validado.
+**Obligatorio 1, Fundamentos de Ingeniería Biomédica.** Facultad de Ingeniería, Universidad ORT Uruguay, 2026.
+**Equipo:** Renzo Donagrandi (315078) y Facundo Iraola (244141).
 
-La carpeta debe conservarse completa: `ejecutar_simulacion.py`, `src` y
-`pruebas` deben quedar al mismo nivel. Ejecutar desde la raíz del proyecto:
+El Paciente Virtual es un simulador educativo formado por agentes (cardiovascular,
+respiratorio y nervioso) que intercambian variables a través de un Estado Fisiológico
+Global (EFG) coordinado por un motor de paso fijo. En este obligatorio se agregó un
+**agente integrador de ECG**. El agente lee una señal externa (20 s a 250 Hz, con una
+taquiarritmia entre los 5 y los 14 s), la valida, la sincroniza con el reloj del motor y
+publica `frecuencia_cardiaca_objetivo` y `eficiencia_ritmo`. Así la arritmia modifica
+de verdad la frecuencia cardíaca, el volumen sistólico, el gasto cardíaco, la presión
+arterial media y el aporte sistémico de oxígeno del paciente.
+
+> Proyecto con fines exclusivamente educativos. No diagnostica arritmias ni debe
+> usarse para decisiones clínicas.
+
+## Inicio rápido
+
+Requiere Python 3.10 o posterior. No usa bibliotecas externas. Desde esta carpeta:
 
 ```bash
-python3 ejecutar_simulacion.py
+python3 agente_externo_ecg.py                      # genera resultados/ecg_simulado.csv
+python3 interfaz_web.py                            # abre http://127.0.0.1:8765
+python3 -m unittest discover -s pruebas -t . -v    # 43 pruebas
 ```
 
-Ejecutar pruebas:
+En la interfaz: **Seleccionar CSV de ECG** → `resultados/ecg_simulado.csv` → duración
+de 60 s → **Ejecutar simulacion**. Los requisitos, la ejecución sin interfaz, los
+archivos de prueba y los problemas frecuentes se detallan en
+[INSTRUCCIONES.md](INSTRUCCIONES.md).
+
+## Contenido del repositorio
+
+| Ruta | Contenido |
+|---|---|
+| `informe/Informe Obligatorio 1 - FIB.docx` | Informe técnico: arquitectura, resultados y discusión. |
+| `informe/` | Scripts, datos y figuras que reproducen los resultados del informe ([detalle](informe/README.md)). |
+| `src/paciente_virtual/` | Paquete del simulador: motor, estado, agentes y el agente ECG. |
+| `interfaz_web.py` | Servidor local y página web, con la sección de ECG. |
+| `ejecutar_simulacion_ecg.py` | Simulación acoplada y análisis por fases desde la terminal. |
+| `pruebas/` | Pruebas automáticas (`unittest`). |
+| `datos_prueba/` | CSV válidos, degradado e inválidos para probar la validación. |
+| `agente_externo_ecg.py`, `CONTRATO_ECG.md` | Fuente externa y contrato entregados con la letra (sin cambios). |
+| `INSTRUCCIONES.md` | Instalación y ejecución paso a paso. |
+
+## Arquitectura
+
+La solución respeta la cadena de capas de la letra y del manual de diseño. Cada capa
+conoce únicamente a la siguiente:
+
+```text
+agente_externo_ecg.py           fuente externa (entregada)
+        ↓  CSV
+fuente_ecg.py                   lectura y validación → SenalECG (sin motor ni dibujo)
+        ↓  contrato FuenteMuestrasECG
+ecg.py · AgenteECG              sincronización con el tiempo del motor → 2 publicaciones
+        ↓  Publicacion(variable, valor, unidad, calidad)
+motor.py + estado.py            valida nombre, unidad y dominio; confirma en el EFG
+        ↓  instantánea del ciclo siguiente
+AgenteCardiovascular            consume las dos entradas (ecuaciones sin cambios)
+        ↓  historial
+interfaz_web.py                 transporta el archivo y dibuja; no calcula fisiología
+```
+
+- **El modelo no conoce el ECG.** El agente cardiovascular lee
+  `frecuencia_cardiaca_objetivo` y `eficiencia_ritmo` desde el EFG, igual que
+  cualquier otra variable. No se modificó ninguna ecuación fisiológica.
+- **El agente no conoce el CSV.** `AgenteECG` acepta cualquier objeto que cumpla
+  `FuenteMuestrasECG`, así que un dispositivo, una IA o un programa en red pueden
+  reemplazar al CSV sin tocar el agente, el motor ni las gráficas.
+- **La interfaz no valida ni calcula.** El navegador envía el texto del CSV y el
+  servidor lo valida con `fuente_ecg.py`, tanto al cargarlo como al simular.
+
+### Contrato del agente
+
+| | |
+|---|---|
+| `identificador` | `"agente_ecg"` |
+| `entradas` | `frozenset()`: no consume variables fisiológicas, solo `estado.tiempo_s` y `paso_s`. |
+| `salidas` | `frecuencia_cardiaca_objetivo` (`"latido/min"`, 0 a 240) y `eficiencia_ritmo` (`"1"`, 0,2 a 1,2) |
+| Registro | `crear_motor_referencia(agentes_adicionales=[AgenteECG(senal)])` |
+
+| Columna del CSV | Uso |
+|---|---|
+| `frecuencia_cardiaca_lpm` | Se publica como `frecuencia_cardiaca_objetivo`. |
+| `eficiencia_ritmo` | Se publica como `eficiencia_ritmo`. |
+| `tiempo_s` | Sincronización con el motor. |
+| `ecg_mV` | Solo para graficar. |
+| `evento` | Marca el inicio y el fin de cada episodio. |
+
+### Sincronización temporal
+
+El ECG tiene 250 muestras por segundo y el motor avanza de a 0,1 s. En el ciclo con
+tiempo `t` y paso `Δt`, el agente **promedia la frecuencia y la eficiencia de las
+muestras del intervalo (t − Δt, t]**. Solo usa muestras del pasado, como haría una fuente
+en tiempo real. Como los intervalos no se superponen y cubren todo el tiempo, cada
+muestra se usa exactamente una vez.
+
+| Situación | Qué publica el agente | Calidad |
+|---|---|---|
+| Hay muestras en el intervalo | Su promedio | La de la señal |
+| Intervalo vacío porque `Δt` es menor que el período de muestreo | La última muestra anterior | La de la señal |
+| La señal ya terminó | La última muestra (en `ecg_simulado.csv`, ritmo basal) | `degradado` |
+| Todavía no hay ninguna muestra | FC 0 («sin control externo», según el catálogo) y eficiencia 1 | `valido` |
+
+El agente no guarda estado entre ciclos, así que dos simulaciones iguales dan el mismo
+resultado. Por la instantánea común del motor, lo que se publica en un ciclo lo lee el
+modelo cardiovascular en el siguiente: el efecto aparece 0,1 s después de la publicación.
+
+### Validación y calidad de la señal
+
+`fuente_ecg.py` reúne todos los problemas antes de rechazar un archivo y los informa
+con su número de línea:
+
+- **Error (la señal no se usa):** archivo inexistente, no seleccionado, vacío o sin
+  encabezado; columnas obligatorias ausentes; celdas vacías, no numéricas o no finitas;
+  menos de dos muestras; tiempos negativos, repetidos o desordenados; FC fuera de 20 a
+  240 latido/min; eficiencia fuera de 0,2 a 1,2.
+- **Advertencia (la señal queda `degradado`, pero se puede simular):** evento
+  desconocido, muestreo irregular o posible pérdida de muestras.
+
+Ante un error la aplicación no se cierra. La interfaz muestra los mensajes, descarta la
+señal y borra los resultados anteriores para que no se confundan con los del archivo
+nuevo.
+
+## Pruebas
 
 ```bash
 python3 -m unittest discover -s pruebas -t . -v
 ```
 
-Para ejecutar todos los escenarios incluidos:
+Se ejecutan 43 pruebas: las 25 originales de `test_paciente_virtual.py`, sin cambios, y
+18 nuevas. Las cinco que exige la letra están en `pruebas/test_agente_ecg.py`:
 
-```bash
-python3 ejecutar_escenarios.py
-```
+| Prueba | Qué verifica |
+|---|---|
+| `test_lee_y_valida_un_csv_correcto` | Columnas, conversión, 5001 muestras, 250 Hz, calidad y episodios. |
+| `test_rechaza_un_csv_incorrecto` | Columnas ausentes, vacíos, texto, rangos, menos de dos muestras y archivos inexistentes. |
+| `test_rechaza_tiempos_repetidos_o_desordenados` | Tiempos no negativos y estrictamente crecientes. |
+| `test_publica_la_muestra_correspondiente_al_tiempo` | Nombres y unidades, promedio del intervalo, distintos pasos, sin pérdida ni duplicación y registro en el motor. |
+| `test_la_arritmia_modifica_el_paciente_y_luego_se_recupera` | Cambios de FC, VS, GC, PAM y DO₂ durante el episodio y recuperación posterior. |
 
-Para abrir la interfaz gráfica local en el navegador:
+Las demás prueban otra fuente distinta del CSV, un episodio en otros tiempos, el
+análisis por fases, los CSV de `datos_prueba/` y las rutas de la interfaz sin abrir el
+navegador (`pruebas/test_interfaz_ecg.py`).
 
-```bash
-python3 interfaz_web.py
-```
+## Archivos nuevos y modificados
 
-## Tarea: integración de un agente externo de ECG
+| Archivo | Cambio |
+|---|---|
+| `src/paciente_virtual/fuente_ecg.py` | **Nuevo.** Lectura y validación (`leer_csv_ecg`, `interpretar_csv_ecg`, `validar_muestras`), `SenalECG` y calidad. |
+| `src/paciente_virtual/ecg.py` | **Nuevo.** `AgenteECG`, contrato `FuenteMuestrasECG` y estrategia de sincronización. |
+| `src/paciente_virtual/configuracion.py` | Parámetro opcional `agentes_adicionales`; sin él, el motor es idéntico al original. |
+| `src/paciente_virtual/analisis.py` | Nueva función `analizar_por_fases` (antes, durante y después de un intervalo). |
+| `interfaz_web.py` | Ruta `POST /ecg/cargar`, envío de la señal a `/simular` y `/sensibilidad`, sección y gráfica del ECG, marcadores del episodio y tabla por fases. |
+| `ejecutar_simulacion_ecg.py` | **Nuevo.** Simulación acoplada sin interfaz. |
+| `pruebas/test_agente_ecg.py`, `pruebas/test_interfaz_ecg.py` | **Nuevos.** Pruebas del agente, la validación y la interfaz. |
+| `datos_prueba/` | **Nuevo.** CSV de prueba y el script que los genera. |
+| `informe/` | **Nuevo.** Informe y generación reproducible de sus datos y figuras. |
 
-Esta entrega no contiene la solución. El programa `agente_externo_ecg.py`
-representa una fuente externa que genera la señal entregada.
-Los estudiantes deberán desarrollar el agente integrador y agregar su
-visualización a la interfaz, respetando el contrato descrito en
-`CONTRATO_ECG.md`.
+El motor, el estado, los tres agentes fisiológicos y el catálogo de variables no se
+modificaron.
 
-Para generar el CSV de demostración:
+## Reemplazar el CSV por otra fuente
 
-```bash
-python3 agente_externo_ecg.py
-```
+1. Escribir una clase que cumpla `FuenteMuestrasECG` (`ecg.py`): `calidad`,
+   `tiempo_final_s`, `muestras_en_intervalo(inicio_s, fin_s)` y
+   `ultima_muestra_hasta(tiempo_s)`.
+2. Si la fuente produce `MuestraECG`, validarlas con
+   `fuente_ecg.validar_muestras(muestras, origen)` para reutilizar los mismos controles.
+3. Registrar el agente con `crear_motor_referencia(agentes_adicionales=[AgenteECG(fuente)])`.
 
-El archivo resultante contiene un ritmo basal, una taquiarritmia entre los
-segundos 5 y 14 y una recuperación. La interfaz entregada todavía no sabe
-leerlo ni graficarlo: esa es parte de la tarea.
+Para una fuente en vivo (microcontrolador, Raspberry Pi, red o IA), la clase guardaría
+las muestras con su tiempo en un búfer acotado. Como la sincronización solo usa muestras
+del pasado, el agente funciona igual. Una salida de IA con poca confianza se publicaría
+con calidad `degradado`.
 
-También se puede cambiar la señal generada:
+## Modelo fisiológico base (código entregado)
 
-```bash
-python3 agente_externo_ecg.py --duracion 30 --inicio-arritmia 8 --fin-arritmia 20
-```
+- **Cardiovascular:** calcula FC, VS, GC, PAM y DO₂. La FC tiende a su objetivo con
+  τ = 3 s y la PAM con τ = 2 s. Si `frecuencia_cardiaca_objetivo > 0`, esa entrada
+  reemplaza el objetivo autonómico de la FC; `eficiencia_ritmo` multiplica
+  directamente el VS. Es un modelo concentrado: no representa cavidades, válvulas ni
+  pulsatilidad.
+- **Nervioso:** barorreflejo y quimiorreflejo reducidos. La caída de la PAM aumenta la
+  actividad simpática y reduce la parasimpática, con constantes de tiempo distintas.
+- **Respiratorio:** ventilación, PaCO₂ con un compartimento dinámico, ecuación alveolar
+  simplificada, saturación por curva de Hill, contenido arterial de O₂ y pH estimado.
 
-El agente desarrollado deberá comunicar al modelo las entradas ya preparadas
-`frecuencia_cardiaca_objetivo` y `eficiencia_ritmo`. Consulte
-`CONTRATO_ECG.md` para conocer el alcance y el informe solicitado.
-
-La simulación escribe `resultados/simulacion.csv`.
-
-## Modelo respiratorio actual
-
-El agente respiratorio calcula frecuencia respiratoria, ventilación minuto,
-ventilación alveolar, PaCO2, PaO2 y SaO2. Usa un compartimento dinámico de CO2,
-la forma simplificada de la ecuación alveolar del oxígeno y una curva de Hill
-para la saturación. Sus parámetros están en `ParametrosRespiratorios` y pueden
-reemplazarse sin cambiar el motor.
-
-Es un modelo educativo reducido: supone volumen corriente, espacio muerto,
-producción de CO2, cociente respiratorio y gradiente alveolo-arterial constantes.
-No debe utilizarse para decisiones clínicas.
-
-## Modelo cardiovascular actual
-
-El agente cardiovascular calcula frecuencia cardíaca, volumen sistólico, gasto
-cardíaco y presión arterial media. Relaciona el volumen sanguíneo con la
-precarga, la contractilidad con el volumen sistólico y la resistencia vascular
-con la poscarga y la presión. También admite estimulación simpática e hipoxia.
-Es un modelo concentrado educativo; no representa cavidades, válvulas ni la
-forma de onda pulsátil.
-
-## Modelo nervioso actual
-
-El agente nervioso integra un barorreflejo y un quimiorreflejo reducidos. La
-presión arterial modifica por vías opuestas las actividades simpática y
-parasimpática. El CO2 elevado y el O2 bajo aumentan el impulso respiratorio y
-aportan activación simpática. Cada rama tiene una constante de tiempo distinta,
-por lo que las respuestas no aparecen instantáneamente.
-
-El acoplamiento de transporte calcula además contenido arterial de oxígeno,
-aporte sistémico de oxígeno y pH estimado. Hemoglobina y bicarbonato pueden
-modificarse desde la interfaz para explorar sus efectos.
-
-Las instrucciones de instalación y ejecución de la solución del agente ECG están en [INSTRUCCIONES.md](INSTRUCCIONES.md).
+Los escenarios originales (`ejecutar_simulacion.py`, `ejecutar_escenarios.py`) siguen
+funcionando igual. Las ecuaciones y sus fuentes están en el manual de diseño del curso.

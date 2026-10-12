@@ -84,11 +84,16 @@ def imprimir_tabla(analisis: dict[str, dict]) -> None:
 def main() -> None:
     analizador = argparse.ArgumentParser(
         description="Simula el Paciente Virtual alimentado por una señal de ECG")
-    analizador.add_argument("--csv", type=Path, default=Path("resultados/ecg_simulado.csv"))
-    analizador.add_argument("--duracion", type=float, default=60.0)
-    analizador.add_argument("--paso", type=float, default=0.1)
-    analizador.add_argument("--salida", type=Path, default=Path("resultados/simulacion_ecg.csv"))
-    analizador.add_argument("--analisis", type=Path, default=Path("resultados/analisis_ecg.json"))
+    analizador.add_argument("--csv", type=Path, default=Path("resultados/ecg_simulado.csv"),
+                            help="CSV de ECG a usar (por defecto: %(default)s)")
+    analizador.add_argument("--duracion", type=float, default=60.0,
+                            help="duración de la simulación en segundos (por defecto: %(default)s)")
+    analizador.add_argument("--paso", type=float, default=0.1,
+                            help="paso temporal del motor en segundos (por defecto: %(default)s)")
+    analizador.add_argument("--salida", type=Path, default=Path("resultados/simulacion_ecg.csv"),
+                            help="CSV donde se guarda el historial (por defecto: %(default)s)")
+    analizador.add_argument("--analisis", type=Path, default=Path("resultados/analisis_ecg.json"),
+                            help="JSON con el análisis por fases (por defecto: %(default)s)")
     argumentos = analizador.parse_args()
 
     try:

@@ -31,7 +31,7 @@ antes el paquete `python3.12-venv`.
 ## Pruebas automáticas
     python3 -m unittest discover -s pruebas -t . -v
 
-Se ejecutan 42 pruebas; todas deben terminar en `OK`.
+Se ejecutan 43 pruebas (25 originales y 18 del agente ECG); todas deben terminar en `OK`.
 
 ## Ejecución sin interfaz
     python3 ejecutar_simulacion_ecg.py --csv resultados/ecg_simulado.csv --duracion 60 --paso 0.1
@@ -70,14 +70,7 @@ cinco figuras en `informe/figuras/`.
 - Las curvas no cambian: verificar que la señal esté cargada (insignia "valido") y que
   la duración cubra el episodio (al menos 14 s; 60 s para ver la recuperación).
 
-## Archivos de la solución
-- `src/paciente_virtual/fuente_ecg.py` (nuevo): lee el CSV y valida la señal (columnas, números, rangos, tiempos, calidad); `validar_muestras` sirve para cualquier otra fuente.
-- `src/paciente_virtual/ecg.py` (nuevo): `AgenteECG`, que publica `frecuencia_cardiaca_objetivo` y `eficiencia_ritmo` a partir de cualquier fuente que cumpla `FuenteMuestrasECG`.
-- `src/paciente_virtual/configuracion.py` (modificado): parámetro opcional `agentes_adicionales` para registrar el agente en el motor.
-- `src/paciente_virtual/analisis.py` (modificado): `analizar_por_fases`, que compara antes, durante y después de un intervalo.
-- `interfaz_web.py` (modificado): ruta `/ecg/cargar`, simulación con la señal, sección y gráfica del ECG, marcadores y tabla por fases. Solo transporta y dibuja.
-- `ejecutar_simulacion_ecg.py` (nuevo): simulación y análisis por fases desde la terminal.
-- `pruebas/test_agente_ecg.py` (nuevo): pruebas de la lectura, la validación, el agente, el análisis y los CSV de prueba.
-- `pruebas/test_interfaz_ecg.py` (nuevo): pruebas del backend de la interfaz sin abrir el servidor.
-- `datos_prueba/` (nuevo): CSV válidos, degradado e inválidos, y el script que los genera.
-- `informe/` (nuevo): scripts que generan los datos (`informe/datos/`) y las figuras (`informe/figuras/`) del informe.
+## Más información
+La arquitectura, la estrategia de sincronización, la validación de la señal y la
+lista de archivos nuevos y modificados están en el [README](README.md). El informe
+técnico está en `informe/Informe Obligatorio 1 - FIB.docx`.
