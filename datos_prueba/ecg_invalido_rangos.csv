@@ -1,0 +1,11 @@
+tiempo_s,ecg_mV,frecuencia_cardiaca_lpm,eficiencia_ritmo,evento
+0.0,0.0,70.0,1.0,ritmo_basal
+0.004,0.0,70.0,1.0,ritmo_basal
+0.008,0.0,70.0,1.0,ritmo_basal
+0.012,0.0,300.0,1.0,ritmo_basal
+0.016,0.0,70.0,1.0,ritmo_basal
+0.02,0.0,70.0,1.0,ritmo_basal
+0.024,0.0,70.0,0.1,ritmo_basal
+0.028,0.0,70.0,1.0,ritmo_basal
+0.032,0.0,70.0,1.0,ritmo_basal
+0.036,0.0,70.0,1.0,ritmo_basal

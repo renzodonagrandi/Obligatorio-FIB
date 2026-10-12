@@ -1,0 +1,94 @@
+{
+  "duracion_s": 60.0,
+  "episodio": {
+    "inicio_s": 5.0,
+    "fin_s": 14.0
+  },
+  "paso_referencia_s": 0.1,
+  "pasos": [
+    {
+      "paso_s": 0.05,
+      "metricas": {
+        "fc_maxima_durante": 141.49398571201857,
+        "vs_minimo_durante": 31.5,
+        "gc_minimo_durante": 2.2314731997115382,
+        "pam_minima_durante": 68.78173977188439,
+        "do2_minimo_durante": 438.0036502664301,
+        "pam_maxima_despues": 130.62699598275552,
+        "tiempo_recuperacion_pam_s": 26.25
+      },
+      "diferencia_porcentual_vs_referencia": {
+        "fc_maxima_durante": -0.06747955453496608,
+        "vs_minimo_durante": 0.0,
+        "gc_minimo_durante": -1.1407074039989136,
+        "pam_minima_durante": -0.05323802793489166,
+        "do2_minimo_durante": -1.140728594903807,
+        "pam_maxima_despues": -0.013024955742207455,
+        "tiempo_recuperacion_pam_s": -0.5681818181818128
+      }
+    },
+    {
+      "paso_s": 0.1,
+      "metricas": {
+        "fc_maxima_durante": 141.58952969592553,
+        "vs_minimo_durante": 31.5,
+        "gc_minimo_durante": 2.2572214924,
+        "pam_minima_durante": 68.81837731882572,
+        "do2_minimo_durante": 443.05773655929556,
+        "pam_maxima_despues": 130.64401230753842,
+        "tiempo_recuperacion_pam_s": 26.4
+      },
+      "diferencia_porcentual_vs_referencia": {
+        "fc_maxima_durante": 0.0,
+        "vs_minimo_durante": 0.0,
+        "gc_minimo_durante": 0.0,
+        "pam_minima_durante": 0.0,
+        "do2_minimo_durante": 0.0,
+        "pam_maxima_despues": 0.0,
+        "tiempo_recuperacion_pam_s": 0.0
+      }
+    },
+    {
+      "paso_s": 0.2,
+      "metricas": {
+        "fc_maxima_durante": 141.83220017944302,
+        "vs_minimo_durante": 31.5,
+        "gc_minimo_durante": 2.3149919408,
+        "pam_minima_durante": 68.88480761249355,
+        "do2_minimo_durante": 454.39736399586764,
+        "pam_maxima_despues": 130.68887062436528,
+        "tiempo_recuperacion_pam_s": 26.6
+      },
+      "diferencia_porcentual_vs_referencia": {
+        "fc_maxima_durante": 0.17139013318190943,
+        "vs_minimo_durante": 0.0,
+        "gc_minimo_durante": 2.5593610815115744,
+        "pam_minima_durante": 0.09652987509435029,
+        "do2_minimo_durante": 2.559401744033074,
+        "pam_maxima_despues": 0.034336297572723,
+        "tiempo_recuperacion_pam_s": 0.7575757575757683
+      }
+    },
+    {
+      "paso_s": 0.5,
+      "metricas": {
+        "fc_maxima_durante": 142.65314474168932,
+        "vs_minimo_durante": 31.5,
+        "gc_minimo_durante": 2.5349663360000005,
+        "pam_minima_durante": 68.92503676312398,
+        "do2_minimo_durante": 497.5754172682673,
+        "pam_maxima_despues": 130.63122846465288,
+        "tiempo_recuperacion_pam_s": 27.0
+      },
+      "diferencia_porcentual_vs_referencia": {
+        "fc_maxima_durante": 0.7511961146053512,
+        "vs_minimo_durante": 0.0,
+        "gc_minimo_durante": 12.30472262182332,
+        "pam_minima_durante": 0.15498686318063146,
+        "do2_minimo_durante": 12.304870496641355,
+        "pam_maxima_despues": -0.009785249748336262,
+        "tiempo_recuperacion_pam_s": 2.2727272727272783
+      }
+    }
+  ]
+}

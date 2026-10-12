@@ -1,3 +1,6 @@
+from collections.abc import Sequence
+
+from .agentes import Agente
 from .estado import EstadoFisiologicoGlobal, ValorFisiologico
 from .modelos import AgenteCardiovascular, AgenteNervioso, AgenteRespiratorio
 from .motor import DefinicionVariable, EventoPerturbacion, MotorSimulacion
@@ -32,7 +35,13 @@ CATALOGO = {
 
 
 def crear_motor_referencia(paso_s: float = 0.1, valores_iniciales: dict[str, float] | None = None,
-                           eventos: list[EventoPerturbacion] | None = None) -> MotorSimulacion:
+                           eventos: list[EventoPerturbacion] | None = None,
+                           agentes_adicionales: Sequence[Agente] | None = None) -> MotorSimulacion:
+    """Crea el motor de referencia.
+
+    ``agentes_adicionales`` permite registrar agentes externos (por ejemplo
+    ``AgenteECG``) después de los tres agentes fisiológicos de base.
+    """
     iniciales = {
         "frecuencia_cardiaca": ValorFisiologico(70.0, "latido/min"),
         "volumen_sistolico": ValorFisiologico(70.0, "mL/latido"),
@@ -64,5 +73,6 @@ def crear_motor_referencia(paso_s: float = 0.1, valores_iniciales: dict[str, flo
             raise KeyError(f"Variable inicial desconocida: {nombre}")
         anterior = iniciales[nombre]
         iniciales[nombre] = ValorFisiologico(valor, anterior.unidad)
-    agentes = [AgenteNervioso(), AgenteCardiovascular(), AgenteRespiratorio()]
+    agentes = [AgenteNervioso(), AgenteCardiovascular(), AgenteRespiratorio(),
+               *(agentes_adicionales or ())]
     return MotorSimulacion(EstadoFisiologicoGlobal(iniciales), agentes, CATALOGO, paso_s, eventos)
