@@ -249,7 +249,7 @@ function activarTooltipFisiologico(c,k){c.onmousemove=e=>{let r=c.getBoundingCli
 let senalECG = null;
 const COLORES_CALIDAD = {valido: '#2e7d32', degradado: '#c77c00', incorrecto: '#c62828'};
 const COLOR_ECG = '#7b3fb0';
-const MARGEN_ECG = 45;
+const MARGEN_ECG = 60;   // margen mayor que en dibujar() para que entren los valores y la etiqueta del eje Y
 const FILAS_ANALISIS_ECG = [
   ['frecuencia_cardiaca', 'FC'], ['volumen_sistolico', 'VS'], ['gasto_cardiaco', 'GC'],
   ['presion_arterial_media', 'PAM'], ['aporte_sistemico_o2', 'DO2'],
@@ -413,7 +413,9 @@ function dibujarECG(cursor) {
   for (let i = 0; i <= 4; i++) {
     let py = m + (h - 2 * m) * i / 4;
     x.beginPath(); x.moveTo(m, py); x.lineTo(w - m, py); x.stroke();
-    x.fillText((e.amax - (e.amax - e.amin) * i / 4).toFixed(2), 3, py + 4);
+    x.save(); x.textAlign = 'right';
+    x.fillText((e.amax - (e.amax - e.amin) * i / 4).toFixed(2), m - 6, py + 4);
+    x.restore();
   }
   let duracion = e.tmax - e.tmin;
   let paso = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500].find(s => duracion / s <= 12) || 1000;
@@ -423,7 +425,7 @@ function dibujarECG(cursor) {
     x.fillStyle = '#526273'; x.fillText(tt.toFixed(paso < 1 ? 1 : 0), px - 6, h - m + 14);
   }
   x.fillText('Tiempo (s)', w / 2 - 28, h - 8);
-  x.save(); x.translate(13, h / 2 + 30); x.rotate(-Math.PI / 2); x.fillText('Amplitud (mV)', 0, 0); x.restore();
+  x.save(); x.translate(14, h / 2); x.rotate(-Math.PI / 2); x.textAlign = 'center'; x.fillText('Amplitud (mV)', 0, 0); x.restore();
   // Todas las muestras, sin decimar, con el eje X en tiempo.
   x.save(); x.strokeStyle = '#b03a2e'; x.lineWidth = 1.2; x.beginPath();
   for (let i = 0; i < t.length; i++) { let px = e.px(t[i]), py = e.py(a[i]); i ? x.lineTo(px, py) : x.moveTo(px, py); }
@@ -458,10 +460,17 @@ function activarTooltipECG() {
 }
 
 function dibujarMarcadoresECG(x, ts, w, h, m) {
+  // Cada etiqueta baja de renglón si se superpondría con una anterior.
+  let finesPorRenglon = [];
   (resultado.marcadores_ecg || []).forEach(e => {
     let px = m + (w - 2 * m) * (e.tiempo_s - ts[0]) / (ts.at(-1) - ts[0]);
     lineaVertical(x, px, m, h - m, COLOR_ECG);
-    x.fillStyle = COLOR_ECG; x.fillText(e.nombre, px + 3, m + 22);
+    let ancho = x.measureText(e.nombre).width, inicio = px + 3;
+    if (inicio + ancho > w - m) inicio = px - 3 - ancho;
+    let renglon = finesPorRenglon.findIndex(fin => inicio > fin + 16);
+    if (renglon < 0) renglon = finesPorRenglon.length;
+    finesPorRenglon[renglon] = inicio + ancho;
+    x.fillStyle = COLOR_ECG; x.fillText(e.nombre, inicio, m + 22 + 12 * renglon);
   });
 }
 
