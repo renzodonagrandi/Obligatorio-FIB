@@ -15,7 +15,7 @@ from typing import Protocol, runtime_checkable
 
 from .agentes import Publicacion
 from .estado import CalidadDato, InstantaneaEstado
-from .fuente_ecg import CalidadSenal, MuestraECG
+from .fuente_ecg import TOLERANCIA_TIEMPO_S, CalidadSenal, MuestraECG
 
 VARIABLE_FRECUENCIA = "frecuencia_cardiaca_objetivo"
 UNIDAD_FRECUENCIA = "latido/min"
@@ -23,7 +23,6 @@ VARIABLE_EFICIENCIA = "eficiencia_ritmo"
 UNIDAD_EFICIENCIA = "1"
 FRECUENCIA_SIN_CONTROL_EXTERNO = 0.0   # centinela documentado en el catálogo
 EFICIENCIA_NEUTRA = 1.0
-TOLERANCIA_TIEMPO_S = 1e-9
 
 
 @runtime_checkable

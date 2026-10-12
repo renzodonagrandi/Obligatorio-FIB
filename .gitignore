@@ -5,3 +5,4 @@ resultados/*.csv
 !resultados/ecg_simulado.csv
 *.egg-info/
 uv.lock
+resultados/*.json

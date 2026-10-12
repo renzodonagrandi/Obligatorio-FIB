@@ -18,10 +18,9 @@ sys.path.insert(0, str(RUTA_FUENTES))
 from paciente_virtual.analisis import analizar_por_fases
 from paciente_virtual.configuracion import crear_motor_referencia
 from paciente_virtual.ecg import AgenteECG
-from paciente_virtual.fuente_ecg import ErrorSenalECG, leer_csv_ecg
+from paciente_virtual.fuente_ecg import TOLERANCIA_TIEMPO_S, ErrorSenalECG, leer_csv_ecg
 
 EVENTO_ARRITMIA = "taquiarritmia"
-TOLERANCIA_TIEMPO_S = 1e-9
 
 
 def ruta_del_proyecto(ruta: Path) -> Path:
