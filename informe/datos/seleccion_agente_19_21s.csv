@@ -1,0 +1,17 @@
+tiempo_s,criterio,cantidad_muestras,frecuencia_cardiaca_lpm,eficiencia_ritmo,calidad
+19.5,promedio_intervalo,25,70.0,1.0,valido
+19.6,promedio_intervalo,25,70.0,1.0,valido
+19.7,promedio_intervalo,25,70.0,1.0,valido
+19.8,promedio_intervalo,25,70.0,1.0,valido
+19.9,promedio_intervalo,25,70.0,1.0,valido
+20.0,promedio_intervalo,25,70.0,1.0,valido
+20.1,retencion_fin_senal,0,70.0,1.0,degradado
+20.2,retencion_fin_senal,0,70.0,1.0,degradado
+20.3,retencion_fin_senal,0,70.0,1.0,degradado
+20.4,retencion_fin_senal,0,70.0,1.0,degradado
+20.5,retencion_fin_senal,0,70.0,1.0,degradado
+20.6,retencion_fin_senal,0,70.0,1.0,degradado
+20.7,retencion_fin_senal,0,70.0,1.0,degradado
+20.8,retencion_fin_senal,0,70.0,1.0,degradado
+20.9,retencion_fin_senal,0,70.0,1.0,degradado
+21.0,retencion_fin_senal,0,70.0,1.0,degradado

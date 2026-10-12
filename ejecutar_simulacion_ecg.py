@@ -88,6 +88,7 @@ def main() -> None:
     analizador.add_argument("--duracion", type=float, default=60.0)
     analizador.add_argument("--paso", type=float, default=0.1)
     analizador.add_argument("--salida", type=Path, default=Path("resultados/simulacion_ecg.csv"))
+    analizador.add_argument("--analisis", type=Path, default=Path("resultados/analisis_ecg.json"))
     argumentos = analizador.parse_args()
 
     try:
@@ -115,8 +116,8 @@ def main() -> None:
               f"episodio ({episodio.fin_s:g} s); no se analiza por fases.")
         return
     analisis = analizar_por_fases(historial, episodio.inicio_s, episodio.fin_s)
-    destino_analisis = RAIZ_PROYECTO / "resultados" / "analisis_ecg.json"
-    destino_analisis.parent.mkdir(exist_ok=True)
+    destino_analisis = ruta_del_proyecto(argumentos.analisis)
+    destino_analisis.parent.mkdir(parents=True, exist_ok=True)
     destino_analisis.write_text(json.dumps({
         "senal": resumen,
         "paso_s": argumentos.paso,

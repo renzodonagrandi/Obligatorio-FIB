@@ -24,6 +24,12 @@ from paciente_virtual.fuente_ecg import (
     validar_muestras,
 )
 
+CARPETA_DATOS_PRUEBA = RAIZ / "datos_prueba"
+CSV_DE_PRUEBA_VALIDOS = ("ecg_valido_20s.csv", "ecg_valido_30s_arritmia_8_20.csv")
+CSV_DE_PRUEBA_DEGRADADOS = ("ecg_degradado_hueco.csv",)
+CSV_DE_PRUEBA_INVALIDOS = ("ecg_invalido_falta_columna.csv", "ecg_invalido_tiempos.csv",
+                           "ecg_invalido_rangos.csv", "ecg_invalido_texto.csv",
+                           "ecg_invalido_una_muestra.csv")
 ENCABEZADO = "tiempo_s,ecg_mV,frecuencia_cardiaca_lpm,eficiencia_ritmo,evento\n"
 VARIABLES_CARDIACAS = ("frecuencia_cardiaca", "volumen_sistolico", "gasto_cardiaco",
                        "presion_arterial_media", "aporte_sistemico_o2")
@@ -354,6 +360,30 @@ class PruebasAgenteECG(unittest.TestCase):
         self.assertEqual(datos["desviacion_final_porcentaje"], 0.0)
         with self.assertRaises(ValueError):
             analizar_por_fases(historial, 1.0, 5.0)
+
+    def test_csv_de_prueba_entregados(self):
+        esperados = CSV_DE_PRUEBA_VALIDOS + CSV_DE_PRUEBA_DEGRADADOS + CSV_DE_PRUEBA_INVALIDOS
+        faltantes = [n for n in esperados if not (CARPETA_DATOS_PRUEBA / n).is_file()]
+        if faltantes:
+            self.fail(f"Faltan CSV de prueba {faltantes}: ejecute "
+                      ".venv/bin/python3 datos_prueba/generar_csv_de_prueba.py")
+        self.assertEqual(
+            sorted(p.name for p in CARPETA_DATOS_PRUEBA.glob("ecg_invalido_*.csv")),
+            sorted(CSV_DE_PRUEBA_INVALIDOS),
+        )
+        for nombre in CSV_DE_PRUEBA_INVALIDOS:
+            with self.subTest(nombre):
+                with self.assertRaises(ErrorSenalECG):
+                    leer_csv_ecg(CARPETA_DATOS_PRUEBA / nombre)
+        for nombre in CSV_DE_PRUEBA_DEGRADADOS:
+            with self.subTest(nombre):
+                senal = leer_csv_ecg(CARPETA_DATOS_PRUEBA / nombre)
+                self.assertEqual(senal.calidad, CalidadSenal.DEGRADADO)
+                self.assertTrue(any("pérdida de muestras" in a for a in senal.advertencias))
+        for nombre in CSV_DE_PRUEBA_VALIDOS:
+            with self.subTest(nombre):
+                self.assertEqual(leer_csv_ecg(CARPETA_DATOS_PRUEBA / nombre).calidad,
+                                 CalidadSenal.VALIDO)
 
 
 if __name__ == "__main__":

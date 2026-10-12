@@ -1,0 +1,17 @@
+tiempo_s,criterio,cantidad_muestras,frecuencia_cardiaca_lpm,eficiencia_ritmo,calidad
+4.5,promedio_intervalo,25,70.0,1.0,valido
+4.6,promedio_intervalo,25,70.0,1.0,valido
+4.7,promedio_intervalo,25,70.0,1.0,valido
+4.8,promedio_intervalo,25,70.0,1.0,valido
+4.9,promedio_intervalo,25,70.0,1.0,valido
+5.0,promedio_intervalo,25,71.86736,0.978,valido
+5.1,promedio_intervalo,25,117.92964,0.45,valido
+5.2,promedio_intervalo,25,125.08172,0.45,valido
+5.3,promedio_intervalo,25,134.48292,0.45,valido
+5.4,promedio_intervalo,25,141.1428,0.45,valido
+5.5,promedio_intervalo,25,144.06044,0.45,valido
+5.6,promedio_intervalo,25,146.16971999999998,0.45,valido
+5.7,promedio_intervalo,25,151.26908,0.45,valido
+5.8,promedio_intervalo,25,160.28928,0.45,valido
+5.9,promedio_intervalo,25,169.71723999999998,0.45,valido
+6.0,promedio_intervalo,25,173.47132000000002,0.45,valido
