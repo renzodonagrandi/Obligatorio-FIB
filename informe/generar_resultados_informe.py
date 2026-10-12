@@ -96,6 +96,8 @@ def commit_actual() -> dict[str, object]:
 
 
 def main() -> None:
+    # El estado de git se toma antes de escribir, para describir el código que generó los datos.
+    estado_git = commit_actual()
     CARPETA_DATOS.mkdir(parents=True, exist_ok=True)
     generados: list[Path] = []
 
@@ -164,7 +166,7 @@ def main() -> None:
         "python": platform.python_version(),
         "version_interfaz": VERSION_INTERFAZ,
         "fecha_hora": datetime.now().astimezone().isoformat(timespec="seconds"),
-        "git": commit_actual(),
+        "git": estado_git,
         "parametros": {
             "ecg": PARAMETROS_ECG,
             "duracion_simulacion_s": DURACION_SIMULACION_S,

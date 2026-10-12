@@ -157,9 +157,13 @@ class PruebasAgenteECG(unittest.TestCase):
 
     def test_rechaza_tiempos_repetidos_o_desordenados(self):
         casos = {
-            "tiempo repetido": ("0.0", "0.004", "0.004", "tiempo repetido"),
-            "tiempo desordenado": ("0.0", "0.008", "0.004", "tiempos desordenados"),
-            "tiempo negativo": ("-0.004", "0.0", "0.004", "tiempo negativo"),
+            "tiempo repetido": ("0.0", "0.004", "0.004",
+                                "tiempo repetido en la muestra 3, línea 4 (t=0.004)"),
+            "tiempo desordenado": ("0.0", "0.008", "0.004",
+                                   "tiempos desordenados en la muestra 3, línea 4 "
+                                   "(t=0.004 es menor que el anterior t=0.008)"),
+            "tiempo negativo": ("-0.004", "0.0", "0.004",
+                                "tiempo negativo en la muestra 1, línea 2 (t=-0.004)"),
         }
         for nombre, (*tiempos, esperado) in casos.items():
             with self.subTest(nombre):

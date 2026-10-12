@@ -340,7 +340,7 @@ def interpretar_csv_ecg(texto: str, origen: str) -> SenalECG:
             continue
         evento = (fila.get("evento") or "").strip()
         muestras.append(MuestraECG(evento=evento, **valores))
-        ubicaciones.append(f"muestra {len(muestras)} (línea {linea})")
+        ubicaciones.append(f"muestra {len(muestras)}, línea {linea}")
 
     return _crear_senal(muestras, origen, ubicaciones, errores)
 

@@ -91,3 +91,5 @@ por lo que las respuestas no aparecen instantáneamente.
 El acoplamiento de transporte calcula además contenido arterial de oxígeno,
 aporte sistémico de oxígeno y pH estimado. Hemoglobina y bicarbonato pueden
 modificarse desde la interfaz para explorar sus efectos.
+
+Las instrucciones de instalación y ejecución de la solución del agente ECG están en [INSTRUCCIONES.md](INSTRUCCIONES.md).
