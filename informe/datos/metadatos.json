@@ -1,10 +1,10 @@
 {
   "python": "3.12.3",
-  "version_interfaz": "1.4.0-ecg",
-  "fecha_hora": "2026-10-12T12:02:40-03:00",
+  "version_interfaz": "1.4.1-ecg",
+  "fecha_hora": "2026-10-12T12:21:50-03:00",
   "git": {
-    "commit": "8f27735",
-    "cambios_sin_commitear": true
+    "commit": "6c06f33",
+    "cambios_sin_commitear": false
   },
   "parametros": {
     "ecg": {
