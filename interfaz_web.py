@@ -42,8 +42,14 @@ VARIABLES = {
 
 
 def interpretar_ecg_recibido(datos_ecg) -> SenalECG:
-    """Convierte el archivo enviado por el navegador en una señal validada por fuente_ecg."""
-    if not isinstance(datos_ecg, dict) or not datos_ecg.get("nombre") or not datos_ecg.get("contenido"):
+    """Convierte el archivo enviado por el navegador en una señal validada por fuente_ecg.
+
+    Solo se considera "sin archivo" cuando falta el nombre o el contenido. Un
+    archivo seleccionado pero vacío llega con contenido "" y lo informa
+    fuente_ecg con su propio mensaje ("el archivo está vacío...").
+    """
+    if (not isinstance(datos_ecg, dict) or not datos_ecg.get("nombre")
+            or datos_ecg.get("contenido") is None):
         raise ErrorSenalECG("sin archivo", ["No se seleccionó ningún archivo"])
     nombre, contenido = str(datos_ecg["nombre"]), str(datos_ecg["contenido"])
     if len(contenido.encode("utf-8")) > LIMITE_ECG_BYTES:
@@ -290,10 +296,15 @@ function mostrarMensajesECG(mensajes, sonErrores) {
   (mensajes || []).forEach(t => { let li = document.createElement('li'); li.textContent = t; ul.append(li); });
 }
 
+// Redondea para mostrar sin restos de punto flotante (29.999999999 -> 30) y sin ceros sobrantes.
+function numeroLegible(valor, decimales = 3) {
+  return String(Number(valor.toFixed(decimales)));
+}
+
 function mostrarDatosECG(r) {
-  let episodios = r.episodios.map(e => `${e.evento}: ${e.inicio_s}–${e.fin_s} s`).join('; ');
+  let episodios = r.episodios.map(e => `${e.evento}: ${numeroLegible(e.inicio_s)}–${numeroLegible(e.fin_s)} s`).join('; ');
   document.getElementById('ecg_datos').textContent =
-    `Muestras: ${r.cantidad_muestras} · Duración: ${r.duracion_s} s · ` +
+    `Muestras: ${r.cantidad_muestras} · Duración: ${numeroLegible(r.duracion_s)} s · ` +
     `Muestreo: ${r.frecuencia_muestreo_hz.toFixed(2)} Hz · ` +
     `Amplitud: ${r.amplitud_minima_mV.toFixed(3)} a ${r.amplitud_maxima_mV.toFixed(3)} mV · ` +
     `Episodios: ${episodios || 'ninguno'}`;

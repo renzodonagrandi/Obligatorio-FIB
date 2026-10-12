@@ -45,7 +45,14 @@ class PruebasInterfazECG(unittest.TestCase):
         self.assertIn("eficiencia_ritmo", str(contexto.exception))
         with self.assertRaises(ErrorSenalECG) as contexto:
             interfaz_web.cargar_ecg(self._ecg(""))
-        self.assertIn("No se seleccionó ningún archivo", str(contexto.exception))
+        self.assertIn("el archivo está vacío", str(contexto.exception))
+        self.assertNotIn("No se seleccionó", str(contexto.exception))
+
+    def test_cargar_ecg_sin_archivo_seleccionado(self):
+        for datos in (None, {}, {"nombre": "ecg.csv"}, {"contenido": "x"}):
+            with self.subTest(datos=datos), self.assertRaises(ErrorSenalECG) as contexto:
+                interfaz_web.cargar_ecg(datos)
+            self.assertIn("No se seleccionó ningún archivo", str(contexto.exception))
 
     def test_simular_con_ecg_modifica_al_paciente(self):
         respuesta = interfaz_web.simular({"escenario": "basal", "duracion_s": "60", "ecg": self._ecg()})
